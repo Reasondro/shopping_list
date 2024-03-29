@@ -31,6 +31,9 @@ class _NewItemState extends State<NewItem> {
     bool validation = _formKey.currentState!.validate();
     //* validation here checks all the validator value. So all validator must be true
     if (validation) {
+      _formKey.currentState!
+          .save(); //* the save function itself. Save the state of all the form fields
+      //! REMEMBER TO SAVE FIRST, THEN POST
       final url = Uri.https(
           'shopping-list-thingy-default-rtdb.asia-southeast1.firebasedatabase.app', //! MAKE SURE NO BACKSLASHES (/) HERE, EVEN IF IT'S FROM THE FIREBASE
           'shopping-list.json');
@@ -41,8 +44,7 @@ class _NewItemState extends State<NewItem> {
             'quantity': _enteredQuantity,
             'category': _selectedCategory.title
           }));
-      _formKey.currentState!
-          .save(); //* the save function itself. Save the state of all the form fields
+
       //? TODO use riverpod provider instead of manually pass items
 
       // Navigator.of(context).pop(GroceryItem( //* disabled for now, cus http stuffs
