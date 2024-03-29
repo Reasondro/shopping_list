@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
 import 'package:shopping_list/data/categories.dart';
 import 'package:shopping_list/models/category.dart';
 import 'package:shopping_list/models/grocery_item.dart';
@@ -27,19 +31,30 @@ class _NewItemState extends State<NewItem> {
     bool validation = _formKey.currentState!.validate();
     //* validation here checks all the validator value. So all validator must be true
     if (validation) {
+      final url = Uri.https(
+          'shopping-list-thingy-default-rtdb.asia-southeast1.firebasedatabase.app', //! MAKE SURE NO BACKSLASHES (/) HERE, EVEN IF IT'S FROM THE FIREBASE
+          'shopping-list.json');
+      http.post(url,
+          headers: {'Content-type': 'application/json'},
+          body: json.encode({
+            'name': _enteredName,
+            'quantity': _enteredQuantity,
+            'category': _selectedCategory.title
+          }));
       _formKey.currentState!
           .save(); //* the save function itself. Save the state of all the form fields
       //? TODO use riverpod provider instead of manually pass items
-      Navigator.of(context).pop(GroceryItem(
-          id: DateTime.now()
-              .toString(), //* technically datetime isnt the best, but works for now
-          name: _enteredName,
-          quantity: _enteredQuantity,
-          category: _selectedCategory));
-      // print(_enteredName);
-      // print(_enteredQuantity);
-      // print(_selectedCategory
-      //     .title); //* or _selectedCategory!.title if using the Category? way
+
+      // Navigator.of(context).pop(GroceryItem( //* disabled for now, cus http stuffs
+      //     id: DateTime.now()
+      //         .toString(), //* technically datetime isnt the best, but works for now
+      //     name: _enteredName,
+      //     quantity: _enteredQuantity,
+      //     category: _selectedCategory));
+      print(_enteredName);
+      print(_enteredQuantity);
+      print(_selectedCategory
+          .title); //* or _selectedCategory!.title if using the Category? way
       // print(validation);
     }
   }
@@ -75,8 +90,10 @@ class _NewItemState extends State<NewItem> {
                 },
                 onSaved: (value) {
                   // if (value == null){ return ;}
-
-                  _enteredName = value!;
+                  setState(() {
+                    _enteredName = value!;
+                  });
+                  // _enteredName = value!;
                 },
               ),
               Row(
@@ -103,7 +120,10 @@ class _NewItemState extends State<NewItem> {
                       //* could also use onChanged
                       onSaved: (value) {
                         //* tryParse vs parse. tryParse will yield null if fails whilst parse will throw an error if fails to convert
-                        _enteredQuantity = int.parse(value!);
+                        setState(() {
+                          _enteredQuantity = int.parse(value!);
+                        });
+                        // _enteredQuantity = int.parse(value!);
                       },
                       initialValue: _enteredQuantity.toString(),
                     ),
