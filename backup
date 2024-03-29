@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shopping_list/data/categories.dart';
 import 'package:shopping_list/models/category.dart';
-import 'package:shopping_list/models/grocery_item.dart';
 
 class NewItem extends StatefulWidget {
   const NewItem({super.key});
@@ -19,28 +18,16 @@ class _NewItemState extends State<NewItem> {
   String _enteredName = "";
   int _enteredQuantity = 1;
 
-  Category _selectedCategory =
-      categories[Categories.vegetables]!; //* set a default value
-  // Category? _selectedCategory; //* thiis could also work
+  Category _selectedCategory = categories[Categories.vegetables]!;
 
   void _saveItem() {
     bool validation = _formKey.currentState!.validate();
-    //* validation here checks all the validator value. So all validator must be true
+
     if (validation) {
-      _formKey.currentState!
-          .save(); //* the save function itself. Save the state of all the form fields
-      //? TODO use riverpod provider instead of manually pass items
-      Navigator.of(context).pop(GroceryItem(
-          id: DateTime.now()
-              .toString(), //* technically datetime isnt the best, but works for now
-          name: _enteredName,
-          quantity: _enteredQuantity,
-          category: _selectedCategory));
-      // print(_enteredName);
-      // print(_enteredQuantity);
-      // print(_selectedCategory
-      //     .title); //* or _selectedCategory!.title if using the Category? way
-      // print(validation);
+      _formKey.currentState!.save();
+      print(_enteredName);
+      print(_enteredQuantity);
+      print(_selectedCategory);
     }
   }
 
@@ -56,14 +43,13 @@ class _NewItemState extends State<NewItem> {
           key: _formKey,
           child: Column(
             children: [
-              //* instead of TextField(). This is basically a cracked version of TextField()
+              //* instead of TextField(), this basically a cracked version of TextField()
               TextFormField(
                 maxLength: 50,
                 decoration: const InputDecoration(
                   label: Text("Name"),
                 ),
                 validator: (value) {
-                  //* built in function to check stuffs, this the one that shows the error message
                   if (value == null ||
                       value.isEmpty ||
                       value.trim().length <= 1 ||
@@ -99,8 +85,6 @@ class _NewItemState extends State<NewItem> {
                           return null;
                         }
                       },
-                      //* onSaved being a method from TextFormField, always wants a string. keep in mind
-                      //* could also use onChanged
                       onSaved: (value) {
                         //* tryParse vs parse. tryParse will yield null if fails whilst parse will throw an error if fails to convert
                         _enteredQuantity = int.parse(value!);
@@ -113,25 +97,21 @@ class _NewItemState extends State<NewItem> {
                   ),
                   Expanded(
                     child: DropdownButtonFormField(
-                        // * DropdownButtomFormField is unconstrained too (conflict with column ??)
+                        // * DropdownButtomFormField is unconstrained horizontally like row
                         items: [
                           for (final category in categories
                               .entries) //* entries convert a map into an iterable
                             DropdownMenuItem(
-                              //* have onSaved, but we here we need to select manually, category.value for instance
-                              //* D.M.I. doesn't support initial value parameter
-                              //* only supports value parameter which must be updated and rendered every time the selection changes
-                              value: category.value,
+                              value: _selectedCategory,
                               child: Row(
                                 children: [
                                   Container(
-                                    //* for the color boxes besides the title
                                     width: 16,
                                     height: 16,
                                     color: category.value.color,
                                   ),
                                   const SizedBox(
-                                    width: 10,
+                                    width: 6,
                                   ),
                                   Text(category.value.title),
                                 ],
