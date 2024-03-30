@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -5,7 +7,8 @@ import 'package:http/http.dart' as http;
 
 import 'package:shopping_list/data/categories.dart';
 import 'package:shopping_list/models/category.dart';
-import 'package:shopping_list/models/grocery_item.dart';
+
+//TODO use riverpod provider instead of manually pass items
 
 class NewItem extends StatefulWidget {
   const NewItem({super.key});
@@ -25,38 +28,49 @@ class _NewItemState extends State<NewItem> {
 
   Category _selectedCategory =
       categories[Categories.vegetables]!; //* set a default value
-  // Category? _selectedCategory; //* thiis could also work
+  // Category? _selectedCategory; //? this could also work
 
-  void _saveItem() {
+  void _saveItem() async {
     bool validation = _formKey.currentState!.validate();
     //* validation here checks all the validator value. So all validator must be true
     if (validation) {
       _formKey.currentState!
           .save(); //* the save function itself. Save the state of all the form fields
+
       //! REMEMBER TO SAVE FIRST, THEN POST
+
       final url = Uri.https(
           'shopping-list-thingy-default-rtdb.asia-southeast1.firebasedatabase.app', //! MAKE SURE NO BACKSLASHES (/) HERE, EVEN IF IT'S FROM THE FIREBASE
-          'shopping-list.json');
-      http.post(url,
+          'shopping-list.json'); //* shopping-list.json as the node in the databse
+      final response = await http.post(url,
           headers: {'Content-type': 'application/json'},
           body: json.encode({
             'name': _enteredName,
             'quantity': _enteredQuantity,
             'category': _selectedCategory.title
           }));
+      //? could use .then((value) => something) here. use await though dart will add .then method for me
 
-      //? TODO use riverpod provider instead of manually pass items
+      print(response.body);
+      print(response.statusCode);
 
-      // Navigator.of(context).pop(GroceryItem( //* disabled for now, cus http stuffs
+      if (!context.mounted)
+      //*to check if some of the context from the async await doodly doo still present or not.
+      //*if false then some of them still present (i.e. dont execute pop)
+      {
+        return;
+      }
+      Navigator.of(context).pop();
+      // Navigator.of(context).pop(GroceryItem( //? disabled for now, cus http stuffs
       //     id: DateTime.now()
       //         .toString(), //* technically datetime isnt the best, but works for now
       //     name: _enteredName,
       //     quantity: _enteredQuantity,
       //     category: _selectedCategory));
-      print(_enteredName);
-      print(_enteredQuantity);
-      print(_selectedCategory
-          .title); //* or _selectedCategory!.title if using the Category? way
+      // print(_enteredName);
+      // print(_enteredQuantity);
+      // print(_selectedCategory
+      //     .title); //* or _selectedCategory!.title if using the Category? way
       // print(validation);
     }
   }
@@ -119,7 +133,7 @@ class _NewItemState extends State<NewItem> {
                         }
                       },
                       //* onSaved being a method from TextFormField, always wants a string. keep in mind
-                      //* could also use onChanged
+                      //? could also use onChanged
                       onSaved: (value) {
                         //* tryParse vs parse. tryParse will yield null if fails whilst parse will throw an error if fails to convert
                         setState(() {
@@ -147,7 +161,7 @@ class _NewItemState extends State<NewItem> {
                               child: Row(
                                 children: [
                                   Container(
-                                    //* for the color boxes besides the title
+                                    //? for the color boxes besides the title
                                     width: 16,
                                     height: 16,
                                     color: category.value.color,
