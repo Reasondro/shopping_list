@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 
 import 'package:shopping_list/data/categories.dart';
 import 'package:shopping_list/models/category.dart';
+import 'package:shopping_list/models/grocery_item.dart';
 
 //TODO use riverpod provider instead of manually pass items
 
@@ -30,12 +31,16 @@ class _NewItemState extends State<NewItem> {
       categories[Categories.vegetables]!; //* set a default value
   // Category? _selectedCategory; //? this could also work
 
+  var _isSending = false;
   void _saveItem() async {
     bool validation = _formKey.currentState!.validate();
     //* validation here checks all the validator value. So all validator must be true
     if (validation) {
       _formKey.currentState!
           .save(); //* the save function itself. Save the state of all the form fields
+      setState(() {
+        _isSending = true;
+      });
 
       //! REMEMBER TO SAVE FIRST, THEN POST
 
@@ -51,8 +56,9 @@ class _NewItemState extends State<NewItem> {
           }));
       //? could use .then((value) => something) here. use await though dart will add .then method for me
 
-      print(response.body);
-      print(response.statusCode);
+      // print(response.body);
+      // print(response.statusCode);
+      final Map<String, dynamic> resData = jsonDecode(response.body);
 
       if (!context.mounted)
       //*to check if some of the context from the async await doodly doo still present or not.
@@ -60,7 +66,11 @@ class _NewItemState extends State<NewItem> {
       {
         return;
       }
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(GroceryItem(
+          id: resData["name"],
+          name: _enteredName,
+          quantity: _enteredQuantity,
+          category: _selectedCategory));
       // Navigator.of(context).pop(GroceryItem( //? disabled for now, cus http stuffs
       //     id: DateTime.now()
       //         .toString(), //* technically datetime isnt the best, but works for now
@@ -190,14 +200,21 @@ class _NewItemState extends State<NewItem> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    onPressed: () {
-                      _formKey.currentState!.reset();
-                    },
+                    onPressed: _isSending
+                        ? null
+                        : () {
+                            _formKey.currentState!.reset();
+                          },
                     child: const Text("Reset"),
                   ),
                   ElevatedButton(
-                    onPressed: _saveItem,
-                    child: const Text("Add Item"),
+                    onPressed: _isSending ? null : _saveItem,
+                    child: _isSending
+                        ? const SizedBox(
+                            height: 16,
+                            width: 16,
+                            child: CircularProgressIndicator())
+                        : const Text("Add Item"),
                   )
                 ],
               )
